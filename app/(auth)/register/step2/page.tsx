@@ -237,6 +237,12 @@ export default function Step2() {
           <p className="text-red-500 text-center mt-4">{error}</p>
         )}
       </div>
+       {/* Floating Chat Icon */}
+            <div className="fixed bottom-6 right-6">
+              <button className="bg-red-600 text-white p-3 rounded-full shadow-lg">
+                <Image src="/images/chat-icon.png" alt="Chat Icon" width={32} height={32} className="cursor-pointer" />
+              </button>
+            </div>
     </div>
   );
 }
