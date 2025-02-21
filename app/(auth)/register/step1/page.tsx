@@ -32,9 +32,7 @@ const corporateSchema = z.object({
 
 export default function Step1() {
   const router = useRouter();
-  const [type, setType] = useState<"individual" | "corporate">(
-    "individual"
-  );
+  const [type, setType] = useState<"individual" | "corporate">("individual");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -48,41 +46,52 @@ export default function Step1() {
     ),
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    companyName?: string;
+    businessType?: string;
+    incorporationDate?: string;
+  }) => {
     setLoading(true);
     setError("");
-  
+
     try {
       const emailToUse = data.email || localStorage.getItem("email");
-  
+
       if (!emailToUse) {
         setError("Email is required.");
         return;
       }
-  
+
       localStorage.setItem("email", emailToUse);
-  
+
       const { error } = await supabase.from("users").insert([
         {
           email: emailToUse, // Ensure email is always stored
           companyName: data.companyName || null,
           businessType: data.businessType || null,
           incorporationDate: data.incorporationDate || null,
-          type, 
+          type,
         },
       ]);
-  
+
       if (error) throw error;
-  
-      router.push(`/register/step2?type=${type}&email=${encodeURIComponent(emailToUse)}`);
-    } catch (err: any) {
-      setError(err.message || "Something went wrong!");
+
+      router.push(
+        `/register/step2?type=${type}&email=${encodeURIComponent(emailToUse)}`
+      );
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || "Something went wrong!");
+      } else {
+        setError("Something went wrong!");
+      }
     } finally {
       setLoading(false);
     }
   };
-  
-  
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 text-[14px]">
@@ -132,7 +141,7 @@ export default function Step1() {
 
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {console.log("Form errors:", errors)}
+          {/* {console.log("Form errors:", errors)} */}
           {type === "individual" ? (
             <>
               <div className="flex gap-4">
@@ -148,7 +157,7 @@ export default function Step1() {
                   />
                   {errors.firstName && (
                     <p className="text-red-500 text-sm">
-                      {errors.firstName.message}
+                      {errors.firstName.message as string}
                     </p>
                   )}
                 </div>
@@ -164,7 +173,7 @@ export default function Step1() {
                   />
                   {errors.lastName && (
                     <p className="text-red-500 text-sm">
-                      {errors.lastName.message}
+                      {errors.lastName.message as string}
                     </p>
                   )}
                 </div>
@@ -178,7 +187,7 @@ export default function Step1() {
                   {...register("email")}
                 />
                 {errors.email && (
-                  <p className="text-red-500 text-sm">{errors.email.message}</p>
+                  <p className="text-red-500 text-sm">{errors.email.message as string}</p>
                 )}
               </div>
             </>
@@ -194,7 +203,7 @@ export default function Step1() {
                 />
                 {errors.companyName && (
                   <p className="text-red-500 text-sm">
-                    {errors.companyName.message}
+                    {errors.companyName.message as string}
                   </p>
                 )}
               </div>
@@ -217,7 +226,7 @@ export default function Step1() {
                   </select>
                   {errors.businessType && (
                     <p className="text-red-500 text-sm">
-                      {errors.businessType.message}
+                      {errors.businessType.message as string}
                     </p>
                   )}
                 </div>
@@ -233,7 +242,7 @@ export default function Step1() {
                   />
                   {errors.incorporationDate && (
                     <p className="text-red-500 text-sm">
-                      {errors.incorporationDate.message}
+                      {errors.incorporationDate.message as string}
                     </p>
                   )}
                 </div>
@@ -253,7 +262,7 @@ export default function Step1() {
               disabled={loading}
               className="text-[#D71E0E] hover:text-red-500 font-semibold"
             >
-              {loading ? "Processing..." : "Next Step"}
+              {loading ? "Processing..." : "NEXT STEP"}
             </button>
           </div>
         </form>
