@@ -296,7 +296,7 @@ export default function Step2() {
   const router = useRouter();
 
   const [email, setEmail] = useState<string | null>(null);
-  const [accountType, setAccountType] = useState<string>("individual");
+  const [accountType, setAccountType] = useState<"individual" | "corporate">("individual");
   const [countryCode, setCountryCode] = useState("+1");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -304,39 +304,30 @@ export default function Step2() {
   // Load persisted email & accountType
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const typeParam = params.get("type");
+    const typeParam = params.get("type") as "individual" | "corporate";
     const emailParam = params.get("email");
-  
-    const storedAccountType = localStorage.getItem("accountType");
+
+    const storedAccountType = localStorage.getItem("accountType") as "individual" | "corporate";
     const storedEmail = localStorage.getItem("email");
-  
+
     // Use query param if available, otherwise fallback to localStorage
-    if (typeParam) {
-      setAccountType(typeParam);
-      localStorage.setItem("accountType", typeParam);
-    } else if (storedAccountType) {
-      setAccountType(storedAccountType);
+    const finalType = typeParam || storedAccountType || "individual";
+    const finalEmail = emailParam || storedEmail;
+
+    setAccountType(finalType);
+    if (finalEmail) {
+      setEmail(finalEmail);
+      localStorage.setItem("email", finalEmail); // Persist email
     }
-  
-    if (emailParam) {
-      setEmail(emailParam);
-      localStorage.setItem("email", emailParam);
-    } else if (storedEmail) {
-      setEmail(storedEmail);
-    }
+    localStorage.setItem("accountType", finalType);
   }, []);
-  
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(
-      accountType === "individual"
-        ? individualStep2Schema
-        : corporateStep2Schema
-    ),
+    resolver: zodResolver(accountType === "individual" ? individualStep2Schema : corporateStep2Schema),
   });
 
   const onSubmit = async (data: any) => {
@@ -351,24 +342,18 @@ export default function Step2() {
         return;
       }
   
-      // Store email for corporate users
-      if (accountType === "corporate") {
-        localStorage.setItem("email", emailToUse);
-        setEmail(emailToUse);
-      }
+      localStorage.setItem("email", emailToUse);
   
-      // Hash the password
       const hashedPassword = await bcrypt.hash(data.password, 10);
   
-      // Save user in Supabase
-      await supabase.from("users").insert([
-        {
-          email: emailToUse,
-          hashed_password: hashedPassword,
-        },
-      ]);
+      // Update the existing user instead of inserting a new record
+      const { error } = await supabase
+        .from("users")
+        .update({ hashed_password: hashedPassword })
+        .eq("email", emailToUse);
   
-      // Redirect to Step 3 (OTP verification)
+      if (error) throw error;
+  
       router.push(`/register/step3?email=${encodeURIComponent(emailToUse)}`);
     } catch (err: any) {
       setError(err.message || "Something went wrong!");
@@ -381,125 +366,50 @@ export default function Step2() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 text-[14px]">
       <div className="flex justify-center mb-6">
-        <Image
-          src="/images/comx-logo.png"
-          alt="ComX Logo"
-          width={161}
-          height={84}
-        />
+        <Image src="/images/comx-logo.png" alt="ComX Logo" width={161} height={84} />
       </div>
       <div className="bg-white p-8 rounded-sm shadow-lg md:w-[555px] md:h-[570px]">
-        <h2 className="text-center text-[30px] font-[400] mt-6">
-          Register new account
-        </h2>
-        <p className="text-center text-[#1e1e1e] mb-10">
-          Sign up for an account and start trading today
-        </p>
-                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-           {accountType === "individual" ? (
+        <h2 className="text-center text-[30px] font-[400] mt-6">Register new account</h2>
+        <p className="text-center text-[#1e1e1e] mb-10">Sign up for an account and start trading today</p>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {accountType === "individual" ? (
             <>
               <div>
                 <label className="block font-medium mb-2">Password</label>
-                <input
-                  type="password"
-                  placeholder="Enter Password"
-                  className="w-full px-4 py-2 border rounded-sm md:h-[52px]"
-                  {...register("password")}
-                />
-                {errors.password && (
-                  <p className="text-red-500 text-sm">
-                    {String(errors.password?.message)}
-                  </p>
-                )}
+                <input type="password" placeholder="Enter Password" className="w-full px-4 py-2 border rounded-sm md:h-[52px]" {...register("password")} />
+                {errors.password && <p className="text-red-500 text-sm">{String(errors.password?.message)}</p>}
               </div>
               <div>
-                <label className="block font-medium mb-2">
-                  Confirm Password
-                </label>
-                <input
-                  type="password"
-                  placeholder="Confirm Password"
-                  className="w-full px-4 py-2 border rounded-sm md:h-[52px]"
-                  {...register("confirmPassword")}
-                />
-                {errors.confirmPassword && (
-                  <p className="text-red-500 text-sm">
-                    {String(errors.confirmPassword?.message)}
-                  </p>
-                )}
+                <label className="block font-medium mb-2">Confirm Password</label>
+                <input type="password" placeholder="Confirm Password" className="w-full px-4 py-2 border rounded-sm md:h-[52px]" {...register("confirmPassword")} />
+                {errors.confirmPassword && <p className="text-red-500 text-sm">{String(errors.confirmPassword?.message)}</p>}
               </div>
               <div>
                 <label className="block font-medium mb-2">Phone Number</label>
                 <div className="flex gap-2">
-                  <select
-                    className="border rounded-sm px-2 md:h-[52px]"
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                  >
+                  <select className="border rounded-sm px-2 md:h-[52px]" value={countryCode} onChange={(e) => setCountryCode(e.target.value)}>
                     <option value="+1">+1 (US)</option>
                     <option value="+44">+44 (UK)</option>
                     <option value="+234">+234 (NG)</option>
                     <option value="+91">+91 (IN)</option>
                   </select>
-                  <input
-                    type="text"
-                    placeholder="Enter Phone Number"
-                    className="w-full px-4 py-2 border rounded-sm md:h-[52px]"
-                    {...register("phoneNumber")}
-                  />
+                  <input type="text" placeholder="Enter Phone Number" className="w-full px-4 py-2 border rounded-sm md:h-[52px]" {...register("phoneNumber")} />
                 </div>
-                {errors.phoneNumber && (
-                  <p className="text-red-500 text-sm">
-                    {String(errors.phoneNumber?.message)}
-                  </p>
-                )}
+                {errors.phoneNumber && <p className="text-red-500 text-sm">{String(errors.phoneNumber?.message)}</p>}
               </div>
             </>
           ) : (
             <>
               <div>
                 <label className="block font-medium mb-2">Company Email</label>
-                <input
-                  type="email"
-                  placeholder="Enter Company Email"
-                  className="w-full px-4 py-2 border rounded-sm md:h-[52px]"
-                  {...register("companyEmail")}
-                />
-                {errors.companyEmail && (
-                  <p className="text-red-500 text-sm">
-                    {String(errors.companyEmail?.message)}
-                  </p>
-                )}
+                <input type="email" placeholder="Enter Company Email" className="w-full px-4 py-2 border rounded-sm md:h-[52px]" {...register("companyEmail")} />
+                {errors.companyEmail && <p className="text-red-500 text-sm">{String(errors.companyEmail?.message)}</p>}
               </div>
               <div>
                 <label className="block font-medium mb-2">Password</label>
-                <input
-                  type="password"
-                  placeholder="Enter Password"
-                  className="w-full px-4 py-2 border rounded-sm md:h-[52px]"
-                  {...register("password")}
-                />
-                {errors.password && (
-                  <p className="text-red-500 text-sm">
-                    {String(errors.password?.message)}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block font-medium mb-2">
-                  Confirm Password
-                </label>
-                <input
-                  type="password"
-                  placeholder="Confirm Password"
-                  className="w-full px-4 py-2 border rounded-sm md:h-[52px]"
-                  {...register("confirmPassword")}
-                />
-                {errors.confirmPassword && (
-                  <p className="text-red-500 text-sm">
-                    {String(errors.confirmPassword?.message)}
-                  </p>
-                )}
+                <input type="password" placeholder="Enter Password" className="w-full px-4 py-2 border rounded-sm md:h-[52px]" {...register("password")} />
+                {errors.password && <p className="text-red-500 text-sm">{String(errors.password?.message)}</p>}
               </div>
             </>
           )}
@@ -509,16 +419,8 @@ export default function Step2() {
 
           {/* Submit Button */}
           <div className="flex justify-center items-center mt-8">
-            <button
-              type="submit"
-              disabled={loading}
-              className="text-[#D71E0E] hover:text-red-500 font-semibold"
-            >
-              {loading
-                ? "Processing..."
-                : accountType === "individual"
-                ? "VERIFY ACCOUNT"
-                : "NEXT STEP"}
+            <button type="submit" disabled={loading} className="text-[#D71E0E] hover:text-red-500 font-semibold">
+              {loading ? "Processing..." : accountType === "individual" ? "VERIFY ACCOUNT" : "NEXT STEP"}
             </button>
           </div>
         </form>

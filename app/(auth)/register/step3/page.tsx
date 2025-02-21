@@ -222,23 +222,28 @@ export default function Step3() {
 
   // Retrieve email & account type from search params or local storage
   useEffect(() => {
-    const storedEmail = typeof window !== "undefined" ? localStorage.getItem("email") : null;
-    const storedType = typeof window !== "undefined" ? localStorage.getItem("accountType") : null;
-    
+    const storedEmail = localStorage.getItem("email");
+    const storedType = localStorage.getItem("accountType");
+  
     const searchEmail = searchParams.get("email");
     const searchType = searchParams.get("type") as "individual" | "corporate";
-
+  
     const finalEmail = searchEmail || storedEmail;
     const finalType = searchType || (storedType as "individual" | "corporate") || "individual";
-
+  
     if (finalEmail) {
       localStorage.setItem("email", finalEmail);
       localStorage.setItem("accountType", finalType);
       setEmail(finalEmail);
       setAccountType(finalType);
-      sendOTP(finalEmail);
+  
+      // Send OTP only if it hasn't been sent before
+      if (!otpSent) {
+        sendOTP(finalEmail);
+      }
     }
-  }, []);
+  }, [otpSent]); // ✅ Only run when `otpSent` state changes
+  
 
   // Send OTP to user's email
   const sendOTP = async (email: string): Promise<void> => {

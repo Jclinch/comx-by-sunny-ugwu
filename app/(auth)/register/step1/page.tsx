@@ -49,35 +49,39 @@ export default function Step1() {
   });
 
   const onSubmit = async (data: any) => {
-    console.log("Form submitted with data:", data);
     setLoading(true);
     setError("");
   
     try {
-      // Save user data to Supabase
+      const emailToUse = data.email || localStorage.getItem("email");
+  
+      if (!emailToUse) {
+        setError("Email is required.");
+        return;
+      }
+  
+      localStorage.setItem("email", emailToUse);
+  
       const { error } = await supabase.from("users").insert([
         {
-          companyName: data.companyName,
-          businessType: data.businessType,
-          incorporationDate: data.incorporationDate,
-          type, // Store the selected type
+          email: emailToUse, // Ensure email is always stored
+          companyName: data.companyName || null,
+          businessType: data.businessType || null,
+          incorporationDate: data.incorporationDate || null,
+          type, 
         },
       ]);
   
       if (error) throw error;
   
-      // Store type in localStorage
-      localStorage.setItem("accountType", type);
-      localStorage.setItem("email", data.email);
-  
-      // Navigate to Step 2
-      router.push(`/register/step2?type=${type}&email=${data.email}`);
+      router.push(`/register/step2?type=${type}&email=${encodeURIComponent(emailToUse)}`);
     } catch (err: any) {
       setError(err.message || "Something went wrong!");
     } finally {
       setLoading(false);
     }
   };
+  
   
 
   return (
