@@ -1,90 +1,153 @@
-# Next Cash
+ComX Trading Platform
+A full-stack Next.js trading platform with Supabase authentication, real-time market data, and a multi-step registration process.
 
-This is a frontend project for a Next cash app, created using the [Next.js](https://nextjs.org) framework and designed to match a Figma design provided for the test.
-
-## Project Overview
-
-The main purpose of this project is to replicate the Figma design provided for the test and create a functional frontend using mock data for authentication. This app includes key components like user authentication, role-based access, a dashboard with user details, and various navigational elements.
-
-## Features
-
-- **User Authentication**: Login functionality using mock data with role-based access.
-- **Dashboard**: Displays user information and includes sample data, quick filter functionality for user search, and pagination for better navigation across pages.
-- **User Details Report**: Detailed view of individual user information.
-- **Navigation**: Includes both a top and side navigation for easy access across the application.
-
-## Getting Started
-
-To run the project locally, follow these instructions:
-
-### Prerequisites
-
-Ensure you have [Node.js](https://nodejs.org/) installed.
-
-### Installation
-
-Clone the repository and install dependencies:
-
-```bash
-git clone https://github.com/Jclinch/Next-cash-dashboard.git
-cd Next-fe-test
+🚀 Features
+User Authentication
+Multi-step registration (Individual & Corporate)
+Secure login with Supabase authentication
+Persistent authentication state
+Dashboard & Trading
+Real-time order book
+Trade logging system
+Live market ticker
+UI & UX
+Tailwind CSS for styling
+Mobile-responsive design
+Fully matches provided UI images
+📂 Folder Structure
+r
+Copy
+Edit
+📦 comx-trading-platform
+ ┣ 📂 app
+ ┃ ┣ 📂 (root) 
+ ┃ ┃ ┣ 📜 layout.tsx
+ ┃ ┃ ┣ 📜 page.tsx  # Dashboard Page
+ ┃ ┣ 📂 auth 
+ ┃ ┃ ┣ 📜 sign-in.tsx  # Login Page
+ ┃ ┃ ┣ 📜 sign-up.tsx  # Multi-Step Registration
+ ┃ ┃ ┣ 📜 forgot-password.tsx
+ ┃ ┣ 📂 welcomePage  # Welcome Page (Redirect if not authenticated)
+ ┃ ┣ 📂 dashboard  
+ ┃ ┃ ┣ 📜 page.tsx  
+ ┃ ┣ 📂 middleware.ts  # Authentication Middleware
+ ┃ ┣ 📂 components  
+ ┃ ┃ ┣ 📜 OrderBook.tsx  
+ ┃ ┃ ┣ 📜 LiveMarket.tsx  
+ ┃ ┃ ┣ 📜 TradeLog.tsx  
+ ┃ ┃ ┣ 📜 End.tsx  
+ ┃ ┃ ┣ 📜 MiniSidebar.tsx  
+ ┣ 📂 public  
+ ┃ ┣ 📂 images  # Logos, Icons  
+ ┣ 📂 styles  
+ ┃ ┣ 📜 globals.css  
+ ┣ 📜 .env.local  # Environment Variables  
+ ┣ 📜 README.md  
+ ┗ 📜 package.json  
+🛠️ Technologies Used
+Frontend: Next.js (App Router), TypeScript, Tailwind CSS
+Backend: Supabase (Auth, Database, Storage)
+State Management: React Hooks
+Authentication: Supabase Auth Helpers
+📝 Installation & Setup
+1️⃣ Clone the repository
+bash
+Copy
+Edit
+git clone https://github.com/your-repo/comx-trading-platform.git
+cd comx-trading-platform
+2️⃣ Install dependencies
+bash
+Copy
+Edit
 npm install
-# or
-yarn install
-```
+3️⃣ Set up environment variables
+Create a .env.local file and add:
 
-### Development Server
-
-Run the development server:
-
-```bash
+env
+Copy
+Edit
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+4️⃣ Run the development server
+bash
+Copy
+Edit
 npm run dev
-# or
-yarn dev
-```
+Open http://localhost:3000 in your browser.
 
-Open [http://localhost:3000](http://localhost:3000) in your browser to view the app.
+🔐 Authentication Flow
+Registration
 
-### Authentication Details
+Users complete a multi-step registration process.
+Corporate & individual registration paths.
+Verification code sent via email/phone.
+Sign-In
 
-- **Mock API**: Authentication is powered by mock APIs created with [mocky.io](https://mocky.io).
-- **Login Credentials**: Use the following login credentials:
-  - **Email**: `test@test.com`
-  - **Password**: Any password with a minimum of 8 characters
+Users authenticate using email & password.
+Redirects to /dashboard upon success.
+Session Handling
 
-### Project Structure
+Middleware enforces authentication.
+If not logged in, user is redirected to /welcomePage.
+🛠️ Key Implementations
+🔹 Middleware (Authentication Guard)
+ts
+Copy
+Edit
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient({ req, res });
 
-The homepage is located at `app/(root)/page.tsx`.
+  const { data: { session } } = await supabase.auth.getSession();
 
-## Technologies Used
+  if (!session && !req.nextUrl.pathname.startsWith("/welcomePage")) {
+    return NextResponse.redirect(new URL("/welcomePage", req.url));
+  }
 
-- **Framework**: React with Next.js
-- **UI Library**: shadcn
-- **Styling**: Tailwind CSS and SCSS
-- **TypeScript**: Used for type safety and improved development experience
+  return res;
+}
 
-## Deployment
+// Apply to protected routes
+export const config = {
+  matcher: ["/dashboard/:path*", "/orders/:path*"],
+};
+🔹 Multi-Step Registration Example
+tsx
+Copy
+Edit
+const Step2 = () => {
+  const [password, setPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
 
-The project is deployed on Vercel and can be accessed at:
+  return (
+    <div>
+      <h2>Set Password</h2>
+      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+    </div>
+  );
+};
+🔹 Sign-In with Supabase
+tsx
+Copy
+Edit
+const handleSignIn = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError(null);
 
-....
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-## Usage
-
-1. **Login**: Enter the credentials specified above to access the dashboard.
-2. **Dashboard**: Explore the dashboard for user details, search functionality, and pagination.
-3. **Navigation**: Use the top and side navigation bars to move through different sections of the app.
-
-## Project Purpose
-
-This project was developed as part of an cash for Next.
-
-## Contact Information
-
-For issues, feedback, or support, please reach out via:
-
-- **Email**: sunnyugwu2011@gmail.com
-- **Phone**: 08102811912
-
----
-
+  if (error) {
+    setError("Credentials not found");
+  } else {
+    await supabase.auth.refreshSession();
+    router.push("/");
+  }
+};
+🎯 Next Steps
+Implement real-time market data using WebSockets
+Optimize performance with server-side rendering (SSR)
+Enhance security with role-based access control
+📜 License
+This project is licensed under the MIT License.

@@ -12,25 +12,30 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilter }) => {
   const [selectedProduct, setSelectedProduct] = useState("All");
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md">
+    <div className="bg-white p-4 rounded-lg shadow-md w-[47%] md:w-auto">
       {/* Board Selection */}
-      <div className="flex items-center space-x-2 mb-2">
+      <div className="flex items-center space-x-2 mb-2 w-full md:w-auto">
+      <div className="flex overflow-x-auto space-x-2 mt-1 scrollbar-hide">
+
         <span className="text-gray-600 text-sm font-semibold">Board</span>
         {boardOptions.map((board) => (
-          <button
+            <button
             key={board}
             className={`px-3 py-1 rounded-full text-sm ${
               selectedBoard === board ? "bg-red-600 text-white" : "bg-gray-100 text-gray-700"
             }`}
             onClick={() => setSelectedBoard(board)}
-          >
+            >
             {board}
-          </button>
+            </button>
         ))}
+      </div>
       </div>
 
       {/* Product Selection */}
       <div className="flex items-center space-x-2 mt-2">
+      <div className="flex overflow-x-auto space-x-2 mt-1 scrollbar-hide">
+
         <span className="text-gray-600 text-sm font-semibold">Product</span>
         {productOptions.map((product) => (
           <button
@@ -46,6 +51,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ onFilter }) => {
             {product}
           </button>
         ))}
+      </div>
       </div>
     </div>
   );

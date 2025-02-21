@@ -14,7 +14,7 @@ export const LiveMarket = () => {
   const scrollingData = [...marketData, ...marketData];
 
   return (
-    <div className="fixed bottom-0 left-0 bg-white text-black flex items-center overflow-hidden md:h-[51px] border border-gray-200 w-full">
+    <div className="fixed bottom-0 left-0 bg-white text-black flex items-center overflow-hidden md:h-[51px] border border-gray-200 w-[50%] md:w-auto">
       {/* Live Market Label */}
       <div className="font-bold bg-black text-white flex items-center justify-center text-[18px] h-full md:w-[164px]">
         Live Market
