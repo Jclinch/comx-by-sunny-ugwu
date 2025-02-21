@@ -1,0 +1,105 @@
+/* Scaled Down Switch - 50% Smaller */
+
+/* From Uiverse.io by andrew-demchenk0 */ 
+.switch {
+    font-size: 8.5px;
+    position: relative;
+    display: inline-block;
+    width: 32px;
+    height: 17px;
+  }
+  
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #c5e2f7;
+    transition: .4s;
+    border-radius: 15px;
+  }
+  
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 15px;
+    width: 15px;
+    border-radius: 10px;
+    left: 1px;
+    bottom: 1px;
+    z-index: 2;
+    background-color: #e8e8e8;
+    transition: .4s;
+  }
+  
+  .sun svg {
+    position: absolute;
+    top: 3px;
+    left: 18px;
+    z-index: 1;
+    width: 12px;
+    height: 12px;
+  }
+  
+  .moon svg {
+    fill: #73C0FC;
+    position: absolute;
+    top: 2.5px;
+    left: 2.5px;
+    z-index: 1;
+    width: 12px;
+    height: 12px;
+  }
+  
+  /* .switch:hover */ .sun svg {
+    animation: rotate 15s linear infinite;
+  }
+  
+  @keyframes rotate {
+    0% {
+      transform: rotate(0);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  
+  /* .switch:hover */ .moon svg {
+    animation: tilt 5s linear infinite;
+  }
+  
+  @keyframes tilt {
+    0% {
+      transform: rotate(0deg);
+    }
+    25% {
+      transform: rotate(-5deg);
+    }
+    75% {
+      transform: rotate(5deg);
+    }
+    100% {
+      transform: rotate(0deg);
+    }
+  }
+  
+  .input:checked + .slider {
+    background-color: #000000;
+  }
+  
+  .input:focus + .slider {
+    box-shadow: 0 0 0.5px #183153;
+  }
+  
+  .input:checked + .slider:before {
+    transform: translateX(15px);
+  }
+  
