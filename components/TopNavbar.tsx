@@ -11,7 +11,7 @@ const TopNavbar = () => {
 
   // Handle Logout Redirect
   const handleLogout = () => {
-    router.push("/welcomePage");
+    router.push("/");
   };
 
   return (

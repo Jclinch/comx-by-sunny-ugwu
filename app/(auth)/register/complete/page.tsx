@@ -11,7 +11,7 @@ const Step4 = () => {
   const handleGoToDashboard = () => {
     setRedirecting(true);
     setTimeout(() => {
-      router.push("/");
+      router.push("/dashboard");
     }, 3000);
   };
 
