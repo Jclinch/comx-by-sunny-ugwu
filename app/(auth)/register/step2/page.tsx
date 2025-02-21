@@ -209,7 +209,7 @@ export default function Step2() {
             <button
               type="submit"
               disabled={loading}
-              className="text-[#D71E0E] hover:text-red-500 font-semibold"
+              className="text-[#D71E0E] hover:text-red-500 font-semibold mt-8"
             >
               {loading
                 ? "Processing..."
