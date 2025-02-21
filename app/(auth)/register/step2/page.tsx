@@ -31,6 +31,7 @@ const individualStep2Schema = z
 const corporateStep2Schema = z.object({
   companyEmail: z.string().email("Invalid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().optional(),
 });
 
 export default function Step2() {
@@ -159,6 +160,20 @@ export default function Step2() {
                 )}
               </div>
               <div>
+                <label className="block font-medium mb-2">Confirm Password</label>
+                <input
+                  type="password"
+                  placeholder="Confirm Password"
+                  className="w-full px-4 py-2 border rounded-sm md:h-[52px]"
+                  {...register("confirmPassword")}
+                />
+                {errors.confirmPassword && (
+                  <p className="text-red-500 text-sm">
+                    {String(errors.confirmPassword?.message)}
+                  </p>
+                )}
+              </div>
+              <div>
                 <label className="block font-medium mb-2">Phone Number</label>
                 <div className="flex gap-2">
                   <select
@@ -203,8 +218,7 @@ export default function Step2() {
             </>
           )}
 
-
-           {/* Submit Button */}
+          {/* Submit Button */}
           <div className="flex justify-center items-center mt-8">
             <button
               type="submit"
