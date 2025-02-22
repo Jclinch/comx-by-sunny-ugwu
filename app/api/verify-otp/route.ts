@@ -1,62 +1,12 @@
-
-// // path : app\api\verify-otp\route.ts
-// import { NextResponse } from "next/server";
-// import { createClient } from "@supabase/supabase-js";
-
-// // Supabase Client
-// const supabase = createClient(
-//   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-//   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-// );
-
-// export async function POST(req: Request) {
-//   try {
-//     const { email, otp } = await req.json();
-
-//     if (!email || !otp) {
-//       return NextResponse.json({ error: "Email and OTP are required" }, { status: 400 });
-//     }
-
-//     // Check OTP validity
-//     const { data: otpData, error } = await supabase
-//       .from("otps")
-//       .select("*")
-//       .eq("email", email)
-//       .eq("otp", otp)
-//       .gte("expires_at", new Date().toISOString()) // Ensures OTP is still valid
-//       .single();
-
-//     if (error || !otpData) throw new Error("Invalid or expired OTP");
-
-//     // OTP is valid, remove it from DB (optional)
-//     await supabase.from("otps").delete().eq("email", email);
-
-//     return NextResponse.json({ message: "OTP verified successfully" }, { status: 200 });
-//   } catch (err) {
-//     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
-//   }
-// }
-
-
-
-
-//
-
-
-
-
-
-
-
-
-
+// path : app\api\verify-otp\route.ts
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  // process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 export async function POST(req: Request) {

@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import Image from "next/image";
 import Link from "next/link";
 
-// Supabase Client
 export default function Step3Page() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -16,39 +15,33 @@ export default function Step3Page() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [resendDisabled, setResendDisabled] = useState(false);
 
-  // Retrieve email & account type from search params or local storage
   useEffect(() => {
     const storedEmail = localStorage.getItem("email");
     const storedType = localStorage.getItem("accountType");
-  
+
     const searchEmail = searchParams.get("email");
     const searchType = searchParams.get("type") as "individual" | "corporate";
-  
+
     const finalEmail = searchEmail || storedEmail;
     const finalType = searchType || (storedType as "individual" | "corporate") || "individual";
-  
+
     if (finalEmail) {
       localStorage.setItem("email", finalEmail);
       localStorage.setItem("accountType", finalType);
       setEmail(finalEmail);
       setAccountType(finalType);
-  
-      // Send OTP only if it hasn't been sent before
+
+      // ✅ Only send OTP if it hasn't been sent before
       if (!otpSent) {
         sendOTP();
       }
     }
-  }, [otpSent, searchParams]); // ✅ Only run when `otpSent` or `searchParams` state changes
-  
+  },['otpSent', 'searchParams'] ); // ✅ Runs only on mount, avoids multiple requests
 
-  // Send OTP to user's email
   const sendOTP = async (): Promise<void> => {
-    const storedEmail = localStorage.getItem("email");
-    if (!storedEmail) {
-      console.error("No email found for corporate user.");
-      return;
-    }
+    if (!email) return;
 
     setLoading(true);
     setError("");
@@ -57,53 +50,47 @@ export default function Step3Page() {
       const response = await fetch("/api/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: storedEmail }),
+        body: JSON.stringify({ email }),
       });
 
       const data: { error?: string } = await response.json();
-      if (response.ok) {
-        console.log("OTP sent successfully:", data);
-      } else {
-        console.error("Error sending OTP:", data.error);
-      }
+      if (!response.ok) throw new Error(data.error || "Failed to send OTP");
 
-      if (!response.ok) throw new Error(data.error || "Failed to resend OTP");
-
+      console.log("OTP sent successfully:", data);
       setOtpSent(true);
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setLoading(false);
+      setResendDisabled(true);
+      setTimeout(() => setResendDisabled(false), 60_000); // 🔄 Enable resend after 60s
     }
   };
 
-  // Form handling
   const { register, getValues, formState: { errors } } = useForm();
 
-  // Handle OTP verification when "Finish" is clicked
   const handleVerifyOTP = async (): Promise<void> => {
     setLoading(true);
     setError("");
-  
-    const otp = getValues("otp"); // Get OTP input value
-  
+
+    const otp = getValues("otp");
+
     if (!otp) {
       setError("OTP is required");
       setLoading(false);
       return;
     }
-  
+
     try {
       const response = await fetch("/api/verify-otp", {
         method: "POST",
         body: JSON.stringify({ email, otp }),
         headers: { "Content-Type": "application/json" },
       });
-  
+
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "OTP verification failed");
-  
-      // ✅ OTP is valid → Redirect to completion
+
       router.push(`/register/complete?email=${email}`);
     } catch (err) {
       setError((err as Error).message);
@@ -133,7 +120,7 @@ export default function Step3Page() {
         <form className="space-y-4">
           <div>
             <p className="text-center text-[14px]">
-              Enter the 4-digit code that was sent to{" "}
+              Enter the 4-digit code sent to{" "}
               {accountType === "corporate"
                 ? email
                 : "+23472639482 and " + email}
@@ -150,9 +137,7 @@ export default function Step3Page() {
               type="text"
               maxLength={4}
               className="w-full px-4 py-2 border rounded-sm md:h-[52px] text-center tracking-widest"
-              onInput={(e) => {
-                e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ""); // Only numbers
-              }}
+              onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/\D/g, "")} // Digits only
             />
 
             {errors.otp?.message && (
@@ -163,25 +148,20 @@ export default function Step3Page() {
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
         </form>
 
-        {!otpSent && (
-          <div className="text-center text-gray-500 text-sm">
-            <button
-              onClick={() => email && sendOTP()}
-              disabled={loading}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              Resend OTP
-            </button>
-          </div>
-        )}
+        <div className="text-center text-gray-500 text-sm mt-4">
+          <button
+            onClick={sendOTP}
+            disabled={resendDisabled || loading}
+            className={`text-gray-400 hover:text-gray-600 ${resendDisabled && "opacity-50 cursor-not-allowed"}`}
+          >
+            {resendDisabled ? "Resend OTP in 60s" : "Resend OTP"}
+          </button>
+        </div>
 
-        <div className="flex justify-between font-semibold">
+        <div className="flex justify-between font-semibold mt-16">
           <Link
-            href={{
-              pathname: "/register/step2",
-              query: { type: accountType, email },
-            }}
-            className="text-gray-300 hover:text-gray-500 mt-44"
+            href={{ pathname: "/register/step2", query: { type: accountType, email } }}
+            className="text-gray-300 hover:text-gray-500"
           >
             Back
           </Link>
@@ -189,13 +169,12 @@ export default function Step3Page() {
           <button
             onClick={handleVerifyOTP}
             disabled={loading}
-            className="flex justify-center text-[#D71E0E] hover:text-red-500 mt-44 text-[14px]"
+            className="text-[#D71E0E] hover:text-red-500"
           >
             {loading ? "Verifying..." : "Finish"}
           </button>
         </div>
       </div>
-      
     </div>
   );
 }
